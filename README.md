@@ -184,4 +184,8 @@ Potential improvements for production systems:
 
 ## License
 
-MIT License
+GNU Affero General Public License v3.0 (AGPL v3)
+
+This software is free to use, modify, and distribute under the terms of the AGPL v3. Any service that deploys this software over a network must also release its source code under the same license.
+
+For commercial licensing: volts-beret0t@icloud.com

@@ -38,22 +38,16 @@ class UserPreferenceHashTable:
 
     def _resize(self):
         """Resize hash table when load factor exceeds threshold."""
-        print(f"[RESIZE] Hash table growing from {self.size} to {self.size * 2}")
         old_table = self.table
-        old_size = self.size
 
         self.size = self.size * 2
         self.table = [None] * self.size
         self.count = 0
         self.collision_count = 0
 
-        rehash_count = 0
         for item in old_table:
             if item is not None and item != "DELETED":
                 self.insert(item[0], item[1])
-                rehash_count += 1
-
-        print(f"[RESIZE] Rehashed {rehash_count} elements")
 
     def insert(self, key: str, value: float):
         if self.count / self.size >= self.load_factor_threshold:

@@ -1,7 +1,7 @@
 # recommendation.py
 # Core recommendation system using hash tables and interaction history
 
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Any
 import random
 
 from hash_table import UserPreferenceHashTable
@@ -94,7 +94,7 @@ class RecommendationSystem:
             return all_content
         return random.sample(all_content, n)
 
-    def analyze_user_preferences(self) -> Dict[str, any]:
+    def analyze_user_preferences(self) -> Dict[str, Any]:
         analysis = {
             "user_id": self.user_id,
             "total_interactions": sum(len(table) for table in self._type_to_table.values()),
@@ -119,7 +119,7 @@ class RecommendationSystem:
                 }
         return analysis
 
-    def get_system_statistics(self) -> Dict[str, any]:
+    def get_system_statistics(self) -> Dict[str, Any]:
         stats = {
             "user_id": self.user_id,
             "content_database_size": len(self.content_db),

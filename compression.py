@@ -34,13 +34,6 @@ def compression_ratio(original: List[float], encoded: List[Tuple[float, int]]) -
     compressed_size = len(encoded)
     return original_size / compressed_size if compressed_size > 0 else 0.0
 
-def should_compress(weights: List[float], threshold: float = 2.0) -> bool:
-    if len(weights) < 3:
-        return False
-    encoded = run_length_encode(weights)
-    ratio = compression_ratio(weights, encoded)
-    return ratio >= threshold
-
 class InteractionHistory:
     def __init__(self, content_id: str, max_history: int = 100):
         self.content_id = content_id
