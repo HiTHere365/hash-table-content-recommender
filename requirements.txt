@@ -1,2 +1,6 @@
-# No third-party dependencies. Standard library only.
-# Requires Python 3.9+
+# Runtime: no third-party dependencies. Standard library only.
+# Minimum Python: 3.7 (f-strings and insertion-ordered dicts are the newest
+# language features relied on). CI runs 3.11 and 3.13.
+#
+# The only package below is for running the test suite (pytest -q).
+pytest

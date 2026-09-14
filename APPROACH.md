@@ -22,7 +22,7 @@ Three standard open-addressing strategies exist:
 | Quadratic probing | Secondary clustering; can fail to find empty slots if table size is not prime |
 | Double hashing | Generates a unique step size per key, producing pseudo-random probe sequences |
 
-Linear probing is the simplest but degrades badly once the table is more than half full. Quadratic probing reduces clustering but can cycle without finding an open slot in a non-prime-sized table. Double hashing computes a second hash of the key to determine the probe step, so two keys that collide at the same initial position will follow different probe sequences. Collisions still resolve in O(1) amortized and clustering is far less likely under high load.
+Linear probing is the simplest but degrades badly once the table is more than half full. Quadratic probing reduces clustering but can cycle without finding an open slot in a non-prime-sized table. Double hashing computes a second hash of the key to determine the probe step, so two keys that collide at the same initial position will follow different probe sequences. Collisions still resolve in expected O(1) time under a uniform hash, and clustering is far less likely under high load.
 
 The two hash functions here use polynomial rolling hashes with different multipliers (31 and 37). The secondary function is shifted by +1 to guarantee a non-zero step size, which is required for double hashing to cover the full table.
 
@@ -32,7 +32,7 @@ The load factor threshold is 0.7. Below that, probe chains stay short and averag
 
 When the threshold is crossed, the table doubles in size and all live entries are rehashed. Doubling keeps the amortized cost of insert at O(1): each element is rehashed at most once per doubling cycle, so the O(n) resize cost spreads across n insertions.
 
-Initial table size for each category is 53 (prime). Prime sizes reduce collision rates by ensuring the secondary hash step is coprime to the table size, which guarantees every slot is reachable in a probe sequence.
+Initial table size for each category is 53 (prime). With a prime size every secondary step is coprime to the table, so a probe sequence visits every slot. Resizing doubles the size, so later sizes (106, 212, ...) are not prime and a step that shares a factor with the size covers only part of the table. The insert path handles this: if a probe sequence returns to its starting index without finding a slot, the table grows again and the insert is retried. Deletions leave tombstones; insert skips over them while probing so that an existing key further along the sequence is updated rather than duplicated, and reuses the first tombstone when the key is new.
 
 ## Preference Weights
 
@@ -40,7 +40,7 @@ Preference weights are stored as floats in [0.0, 1.0] rather than integers. This
 
 ## RLE Compression for Interaction Histories
 
-User interaction sequences frequently contain runs of repeated values. Run-Length Encoding collapses `[0.8, 0.8, 0.8, 0.9, 0.9]` into `[(0.8, 3), (0.9, 2)]`, reducing memory proportionally to the run length. RLE also enables lightweight trend detection: comparing the average weight in the first third of the history against the last third produces a rising, stable, or declining signal without scanning the full sequence.
+User interaction sequences frequently contain runs of repeated values. Run-Length Encoding collapses `[0.8, 0.8, 0.8, 0.9, 0.9]` into `[(0.8, 3), (0.9, 2)]`, reducing memory proportionally to the run length. The compressed form is computed lazily and cached; the raw history is retained (capped at 100 entries) and is what the statistics and trend detection read. Trend detection compares the average weight in the first third of the history against the last third to produce an increasing, stable, or decreasing signal.
 
 ## Cold-Start Strategy
 

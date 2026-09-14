@@ -7,13 +7,25 @@ A modular implementation of a content recommendation system using hash tables wi
 
 ## Project Structure
 
-recommendation-system/
-├── hash_table.py # Core hash table with double hashing
-├── compression.py # RLE compression utilities
-├── content_model.py # Content data models and database
-├── recommendation.py # Main recommendation system logic
-├── demo.py # Demonstration script (RUN THIS)
-└── README.md # This file
+```
+content-recommendation-engine/
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # GitHub Actions: pytest, test_system.py, demo.py on 3.11 and 3.13
+├── .gitignore
+├── APPROACH.md               # Design rationale and trade-offs
+├── LICENSE                   # AGPL v3
+├── README.md                 # This file
+├── compression.py            # RLE compression utilities and InteractionHistory
+├── content_model.py          # Content data models and in-memory database
+├── demo.py                   # Demonstration script (RUN THIS)
+├── hash_table.py             # Core hash table with double hashing
+├── recommendation.py         # Main recommendation system logic
+├── requirements.txt          # Stdlib only at runtime; pytest for tests
+├── test_system.py            # Self-contained test runner (no pytest needed)
+└── tests/
+    └── test_recommender.py   # pytest suite
+```
 
 
 ## File Descriptions
@@ -21,16 +33,17 @@ recommendation-system/
 ### `hash_table.py`
 Core hash table implementation featuring:
 - Double hashing collision resolution
-- Dynamic resizing when load factor exceeds 0.7
+- Dynamic resizing (table doubles) when the load factor reaches 0.7
+- Tombstone deletion; re-inserting a key that sits past a tombstone updates it in place instead of duplicating it
 - O(1) average-case insert, search, and delete operations
-- Comprehensive statistics tracking
+- Statistics tracking: size, count, load factor, cumulative collision count
 
 ### `compression.py`
 Run-Length Encoding utilities including:
 - RLE compression/decompression functions
 - `InteractionHistory` class for managing user interaction sequences
-- Automatic compression with ratio analysis
-- Trend detection for user interest patterns
+- Lazily computed compressed view with ratio analysis (the raw history is kept, capped at 100 entries)
+- Trend detection (first third vs last third of the raw history)
 
 ### `content_model.py`
 Data models and content management:
@@ -44,8 +57,8 @@ Main recommendation system featuring:
 - Separate hash tables for each content type
 - Float-based preference weights (0.0-1.0)
 - Integration with RLE compression for histories
-- Weighted recommendation generation
-- Cold-start recommendations for new users
+- Top-N recommendations per category, sorted by weight; optional weighted shuffle (`diversify=True`, the default) for variety
+- Cold-start recommendations (random sample by content type) for new users
 
 ### `demo.py`
 Comprehensive demonstration script that shows:
@@ -59,14 +72,26 @@ Comprehensive demonstration script that shows:
 
 ### Requirements
 
-- Python 3.7 or higher
-- No external dependencies required (uses only standard library)
+- Python 3.7 or higher (the code uses nothing newer than f-strings and insertion-ordered dicts; CI runs 3.11 and 3.13)
+- No external dependencies required (uses only the standard library)
+- `pytest` is needed only to run the `tests/` suite
 
 ### To Run
 
+```
 python demo.py
+```
 
+### Tests
 
+Two entry points cover the same modules:
+
+```
+pytest -q               # tests/test_recommender.py (requires pytest)
+python test_system.py   # self-contained runner, no dependencies
+```
+
+`test_system.py` was kept so the project stays runnable without pytest; the pytest suite is the one CI reports on.
 
 This will execute a complete demonstration showing:
 1. System initialization
@@ -82,8 +107,8 @@ This will execute a complete demonstration showing:
 ### 1. Hash Table with Double Hashing
 - Primary hash function: Polynomial rolling hash (multiplier: 31)
 - Secondary hash function: Different multiplier (37) for step size
-- Collision resolution: Double hashing minimizes clustering
-- Dynamic resizing: Automatic when load factor > 0.7
+- Collision resolution: double hashing reduces clustering compared with linear probing
+- Dynamic resizing: automatic doubling when load factor reaches 0.7; if a probe sequence cycles back to its start without finding a slot (possible once the doubled size is no longer prime), the table grows and retries
 
 ### 2. Float-Based Weights
 - Preference weights range from 0.0 to 1.0
@@ -92,8 +117,8 @@ This will execute a complete demonstration showing:
 - Standard approach in ML/recommendation systems
 
 ### 3. RLE Compression
-- Compresses repeated interaction values
-- Reduces memory for interaction histories
+- Compresses runs of repeated interaction values
+- Produces a compact representation of each history; in this implementation the raw history is retained (capped at 100 entries) so statistics and trends are computed from it
 - Example: `[0.8, 0.8, 0.8, 0.9, 0.9]` → `[(0.8, 3), (0.9, 2)]`
 - Tracks compression ratios for analysis
 
@@ -111,13 +136,17 @@ This will execute a complete demonstration showing:
 | Search       | O(1)         | O(n)       |
 | Delete       | O(1)         | O(n)       |
 | Resize       | O(n)         | O(n)       |
+| Top-N        | O(m log m)   | O(m log m) |
 | RLE Compress | O(n)         | O(n)       |
+| RLE Decode   | O(n)         | O(n)       |
 
-**Note**: Resize operations are amortized to O(1) because they occur infrequently (only when load factor threshold is exceeded).
+**Notes**: n is the table size for hash operations and the history length for RLE. Resize cost is amortized to O(1) per insert because the table doubles, so each entry is rehashed at most once per doubling. Top-N scans the whole table (m = table size) and sorts the live entries; it is not a heap-based partial sort.
 
 ## Example Output
 
-When you run `demo.py`, you’ll see:
+When you run `demo.py`, you will see output like the following (values vary because interactions are randomly simulated):
+
+```
 
 ======================================================================
 SIMULATING USER INTERACTIONS
@@ -132,16 +161,15 @@ Music Hash Table:
 - Size: 106
 - Stored preferences: 15
 - Load factor: 0.142
-- Collisions handled: 3
+- Collisions handled: 0
 ...
-
-
+```
 
 ## Design Decisions
 
 ### Why Double Hashing?
 - Superior to linear probing (avoids primary clustering)
-- Better than quadratic probing (guaranteed to find slots)
+- Better than quadratic probing at avoiding secondary clustering; a full probe cycle is guaranteed only when the step is coprime to the table size, so the insert path detects a cycle and resizes
 - Provides pseudo-random probe sequences
 - Maintains O(1) average case more reliably
 
@@ -153,9 +181,9 @@ Music Hash Table:
 
 ### Why RLE Compression?
 - User interactions often have repeated values
-- Significant memory savings for long histories
+- Compact representation for histories with long runs
 - Fast compression/decompression (O(n))
-- Enables trend analysis on compressed data
+- Compression ratio is reported per history as a signal of how repetitive a user's engagement is
 
 ### Why Modular Structure?
 - Follows Single Responsibility Principle

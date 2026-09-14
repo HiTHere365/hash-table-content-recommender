@@ -43,7 +43,8 @@ class UserPreferenceHashTable:
         self.size = self.size * 2
         self.table = [None] * self.size
         self.count = 0
-        self.collision_count = 0
+        # collision_count is cumulative for the life of the table; a resize
+        # does not reset it, so rehash collisions are counted too.
 
         for item in old_table:
             if item is not None and item != "DELETED":
@@ -57,9 +58,16 @@ class UserPreferenceHashTable:
         step = self._hash2(key)
         original_index = index
         probes = 0
+        first_tombstone = None
 
-        while self.table[index] is not None and self.table[index] != "DELETED":
-            if self.table[index][0] == key:
+        # Probe until an empty slot. Tombstones ("DELETED") are remembered but
+        # not stopped at, so an existing key further along the probe sequence
+        # is updated in place instead of being inserted a second time.
+        while self.table[index] is not None:
+            if self.table[index] == "DELETED":
+                if first_tombstone is None:
+                    first_tombstone = index
+            elif self.table[index][0] == key:
                 self.table[index] = (key, value)
                 return
             if probes == 0:
@@ -67,9 +75,13 @@ class UserPreferenceHashTable:
             index = (index + step) % self.size
             probes += 1
             if index == original_index:
+                if first_tombstone is not None:
+                    break
                 self._resize()
                 return self.insert(key, value)
 
+        if first_tombstone is not None:
+            index = first_tombstone
         self.table[index] = (key, value)
         self.count += 1
 

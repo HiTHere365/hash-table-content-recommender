@@ -27,15 +27,30 @@ def test_hash_table_basic_operations():
 
 def test_hash_table_collision_handling():
     print("Testing Hash Table Collision Handling…")
+    # Keys like item0, item1, ... hash to consecutive slots under the
+    # polynomial hash and never collide, and the table resizes at 0.7 load.
+    # To force collisions deterministically: disable resizing and pick keys
+    # that share the same primary hash index.
     hash_table = UserPreferenceHashTable(initial_size=7)
-    for i in range(15):
-        hash_table.insert(f"item{i}", float(i) / 10)
-    for i in range(15):
-        value = hash_table.search(f"item{i}")
-        expected = float(i) / 10
-        assert value == expected, f"Failed to retrieve item{i}, expected {expected}, got {value}"
+    hash_table.load_factor_threshold = 2.0  # never resize during this test
+    target = hash_table._hash1("anchor")
+    keys = ["anchor"]
+    i = 0
+    while len(keys) < 4:
+        candidate = f"probe{i}"
+        if hash_table._hash1(candidate) == target:
+            keys.append(candidate)
+        i += 1
+    for n, key in enumerate(keys):
+        hash_table.insert(key, float(n) / 10)
+    for n, key in enumerate(keys):
+        value = hash_table.search(key)
+        expected = float(n) / 10
+        assert value == expected, f"Failed to retrieve {key}, expected {expected}, got {value}"
+    assert hash_table.size == 7, "Table must not have resized"
     stats = hash_table.get_statistics()
-    assert stats["collision_count"] > 0, "Should have collisions with small table"
+    assert stats["collision_count"] == len(keys) - 1, (
+        f"Expected {len(keys) - 1} collisions, got {stats['collision_count']}")
     print(f"  ✓ Handled {stats['collision_count']} collisions successfully")
 
 def test_hash_table_dynamic_resizing():
