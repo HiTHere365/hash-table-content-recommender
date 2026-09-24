@@ -213,7 +213,9 @@ Potential improvements for production systems:
 
 ## License
 
-GNU Affero General Public License v3.0 (AGPL v3)
+GNU Affero General Public License v3.0 (AGPL v3). See [LICENSE](LICENSE).
+
+Copyright (C) 2026 William Rogers.
 
 This software is free to use, modify, and distribute under the terms of the AGPL v3. Any service that deploys this software over a network must also release its source code under the same license.
 
