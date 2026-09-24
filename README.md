@@ -1,9 +1,44 @@
-
 # Social Media Content Recommendation System
 
 ## Overview
 
 A modular implementation of a content recommendation system using hash tables with double hashing collision resolution and Run-Length Encoding (RLE) compression for user interaction histories.
+
+The point of the exercise is the data structures, not the model: every lookup path is a hand-built hash table with open addressing, interaction histories are stored compressed, and the whole thing runs on the Python standard library with no third-party packages. Run `python demo.py` to see it score and rank content for sample users.
+
+## Installation & Running
+
+### Requirements
+
+- Python 3.7 or higher (the code uses nothing newer than f-strings and insertion-ordered dicts; CI runs 3.11 and 3.13)
+- No external dependencies required (uses only the standard library)
+- `pytest` is needed only to run the `tests/` suite
+
+### To Run
+
+```
+python demo.py
+```
+
+### Tests
+
+Two entry points cover the same modules:
+
+```
+pytest -q               # tests/test_recommender.py (requires pytest)
+python test_system.py   # self-contained runner, no dependencies
+```
+
+`test_system.py` was kept so the project stays runnable without pytest; the pytest suite is the one CI reports on.
+
+This will execute a complete demonstration showing:
+1. System initialization
+2. 50 simulated user interactions
+3. Hash table performance metrics
+4. Compression statistics
+5. Personalized recommendations
+6. User preference analysis
+7. Time complexity analysis
 
 ## Project Structure
 
@@ -67,40 +102,6 @@ Comprehensive demonstration script that shows:
 - RLE compression analysis
 - Personalized recommendations
 - Time complexity explanations
-
-## Installation & Running
-
-### Requirements
-
-- Python 3.7 or higher (the code uses nothing newer than f-strings and insertion-ordered dicts; CI runs 3.11 and 3.13)
-- No external dependencies required (uses only the standard library)
-- `pytest` is needed only to run the `tests/` suite
-
-### To Run
-
-```
-python demo.py
-```
-
-### Tests
-
-Two entry points cover the same modules:
-
-```
-pytest -q               # tests/test_recommender.py (requires pytest)
-python test_system.py   # self-contained runner, no dependencies
-```
-
-`test_system.py` was kept so the project stays runnable without pytest; the pytest suite is the one CI reports on.
-
-This will execute a complete demonstration showing:
-1. System initialization
-2. 50 simulated user interactions
-3. Hash table performance metrics
-4. Compression statistics
-5. Personalized recommendations
-6. User preference analysis
-7. Time complexity analysis
 
 ## Key Features
 
