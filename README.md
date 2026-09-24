@@ -43,7 +43,7 @@ This will execute a complete demonstration showing:
 ## Project Structure
 
 ```
-content-recommendation-engine/
+hash-table-content-recommender/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml            # GitHub Actions: pytest, test_system.py, demo.py on 3.11 and 3.13
