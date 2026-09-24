@@ -40,7 +40,7 @@ Preference weights are stored as floats in [0.0, 1.0] rather than integers. This
 
 ## RLE Compression for Interaction Histories
 
-User interaction sequences frequently contain runs of repeated values. Run-Length Encoding collapses `[0.8, 0.8, 0.8, 0.9, 0.9]` into `[(0.8, 3), (0.9, 2)]`, reducing memory proportionally to the run length. The compressed form is computed lazily and cached; the raw history is retained (capped at 100 entries) and is what the statistics and trend detection read. Trend detection compares the average weight in the first third of the history against the last third to produce an increasing, stable, or decreasing signal.
+User interaction sequences frequently contain runs of repeated values. Run-Length Encoding collapses `[0.8, 0.8, 0.8, 0.9, 0.9]` into `[(0.8, 3), (0.9, 2)]`. The encoded view is used for compression-ratio reporting, not to save memory, because the raw history is also kept. The compressed form is computed lazily and cached; the raw history is retained (capped at 100 entries) and is what the statistics and trend detection read. Trend detection compares the average weight in the first third of the history against the last third to produce an increasing, stable, or decreasing signal.
 
 ## Cold-Start Strategy
 

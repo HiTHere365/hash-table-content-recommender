@@ -4,7 +4,7 @@
 
 A modular implementation of a content recommendation system using hash tables with double hashing collision resolution and Run-Length Encoding (RLE) compression for user interaction histories.
 
-The point of the exercise is the data structures, not the model: every lookup path is a hand-built hash table with open addressing, interaction histories are stored compressed, and the whole thing runs on the Python standard library with no third-party packages. Run `python demo.py` to see it score and rank content for sample users.
+The point of the exercise is the data structures, not the model: every lookup path is a hand-built hash table with open addressing, interaction histories carry a run-length-encoded view, and the whole thing runs on the Python standard library with no third-party packages. Run `python demo.py` to see it score and rank content for sample users.
 
 ## Installation & Running
 
@@ -25,6 +25,7 @@ python demo.py
 Two entry points cover the same modules:
 
 ```
+pip install -r requirements.txt   # installs pytest
 pytest -q               # tests/test_recommender.py (requires pytest)
 python test_system.py   # self-contained runner, no dependencies
 ```
@@ -157,13 +158,18 @@ Processed 20/50 interactions...
 ...
 
 ======================================================================
-HASH TABLE PERFORMANCE ANALYSIS
-Music Hash Table:
-- Size: 106
-- Stored preferences: 15
-- Load factor: 0.142
-- Collisions handled: 0
-...
+  HASH TABLE PERFORMANCE ANALYSIS
+======================================================================
+
+ Hash Table Statistics:
+
+  Music Hash Table:
+    • Size: 53
+    • Stored preferences: 7
+    • Load factor: 0.132
+    • Collisions handled: 0
+    • Empty slots: 46
+  ...
 ```
 
 ## Design Decisions
@@ -182,7 +188,7 @@ Music Hash Table:
 
 ### Why RLE Compression?
 - User interactions often have repeated values
-- Compact representation for histories with long runs
+- Compact view of histories with long runs (the raw history is also kept, capped at 100 entries, so this is not a memory saving)
 - Fast compression/decompression (O(n))
 - Compression ratio is reported per history as a signal of how repetitive a user's engagement is
 

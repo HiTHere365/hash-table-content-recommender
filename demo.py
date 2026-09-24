@@ -133,7 +133,7 @@ Key Performance Factors:
  Double Hashing: Minimizes clustering for O(1) average case
  Load Factor < 0.7: Maintains low collision probability
  Dynamic Resizing: Amortizes O(n) rehash across operations
- RLE Compression: Reduces memory for interaction histories
+ RLE Compression: Compact view and repetition signal for histories
 
 Real-World Considerations:
 
